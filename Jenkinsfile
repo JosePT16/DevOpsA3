@@ -3,15 +3,13 @@ pipeline {
 
   options {
     timestamps()
-    ansiColor('xterm')
     skipDefaultCheckout(true)
   }
 
   environment {
-    
     REPORTS_DIR = "reports"
-    PYTHONPATH = "."
-    VENV_DIR = ".venv-ci"
+    PYTHONPATH  = "."
+    VENV_DIR    = ".venv-ci"
     SQLITE_DB_PATH = "ci.db"
   }
 
@@ -25,59 +23,59 @@ pipeline {
 
     stage('Environment setup') {
       steps {
-        sh '''
-          set -eux
+        powershell '''
+          $ErrorActionPreference = "Stop"
           python --version
-          python -m venv "${VENV_DIR}"
-          . "${VENV_DIR}/bin/activate"
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
-          mkdir -p "${REPORTS_DIR}"
+
+          python -m venv "$env:VENV_DIR"
+
+          & "$env:VENV_DIR\\Scripts\\python.exe" -m pip install --upgrade pip
+          & "$env:VENV_DIR\\Scripts\\pip.exe" install -r requirements.txt -r requirements-dev.txt
+
+          if (!(Test-Path $env:REPORTS_DIR)) { New-Item -ItemType Directory -Path $env:REPORTS_DIR | Out-Null }
         '''
       }
     }
 
     stage('Code quality - format (Black)') {
       steps {
-        sh '''
-          set -eux
-          . "${VENV_DIR}/bin/activate"
-          black --check .
+        powershell '''
+          $ErrorActionPreference = "Stop"
+          & "$env:VENV_DIR\\Scripts\\black.exe" --check .
         '''
       }
       post {
         failure {
-          echo "Black formatting check failed. Fix by running: black ."
+          echo "Black formatting check failed. Fix locally by running: black ."
         }
       }
     }
 
     stage('Code quality - lint (flake8)') {
       steps {
-        sh '''
-          set -eux
-          . "${VENV_DIR}/bin/activate"
-          flake8
+        powershell '''
+          $ErrorActionPreference = "Stop"
+          & "$env:VENV_DIR\\Scripts\\flake8.exe"
         '''
       }
       post {
         failure {
-          echo "flake8 failed. Fix issues locally by running: flake8"
+          echo "flake8 failed. Fix locally by running: flake8"
         }
       }
     }
 
     stage('Tests + Coverage') {
       steps {
-        sh '''
-          set -eux
-          . "${VENV_DIR}/bin/activate"
-          python -m pytest \
-            --junitxml="${REPORTS_DIR}/junit.xml" \
-            --cov=app \
-            --cov-report=term-missing \
-            --cov-report=xml:"${REPORTS_DIR}/coverage.xml" \
-            --cov-report=html:"${REPORTS_DIR}/htmlcov" \
+        powershell '''
+          $ErrorActionPreference = "Stop"
+
+          & "$env:VENV_DIR\\Scripts\\python.exe" -m pytest `
+            --junitxml="$env:REPORTS_DIR\\junit.xml" `
+            --cov=app `
+            --cov-report=term-missing `
+            --cov-report=xml:"$env:REPORTS_DIR\\coverage.xml" `
+            --cov-report=html:"$env:REPORTS_DIR\\htmlcov" `
             --cov-fail-under=80
         '''
       }
@@ -100,11 +98,13 @@ pipeline {
         }
       }
       steps {
-        sh '''
-          set -eux
-          . "${VENV_DIR}/bin/activate"
-          python -m build
-          ls -la dist || true
+        powershell '''
+          $ErrorActionPreference = "Stop"
+          & "$env:VENV_DIR\\Scripts\\python.exe" -m build
+
+          if (Test-Path "dist") {
+            Get-ChildItem dist | Format-Table
+          }
         '''
       }
       post {
