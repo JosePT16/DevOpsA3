@@ -41,7 +41,8 @@ pipeline {
       steps {
         powershell '''
           $ErrorActionPreference = "Stop"
-          & "$env:VENV_DIR\\Scripts\\black.exe" --check .
+          & "$env:VENV_DIR\\Scripts\\black.exe" --check app tests
+
         '''
       }
       post {
@@ -55,7 +56,8 @@ pipeline {
       steps {
         powershell '''
           $ErrorActionPreference = "Stop"
-          & "$env:VENV_DIR\\Scripts\\flake8.exe"
+          & "$env:VENV_DIR\\Scripts\\flake8.exe" app tests
+
         '''
       }
       post {
