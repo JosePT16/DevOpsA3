@@ -41,7 +41,9 @@ def test_post_dishes_empty_dish_returns_400(client):
 
 
 def test_post_dishes_non_int_id_returns_400(client):
-    res = client.post("/dishes", json={"id": "abc", "dish": "Sushi", "country": "Japan"})
+    res = client.post(
+        "/dishes", json={"id": "abc", "dish": "Sushi", "country": "Japan"}
+    )
     assert res.status_code == 400
     assert "must be an integer" in res.get_json()["error"]
 

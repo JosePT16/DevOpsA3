@@ -9,7 +9,7 @@ DEFAULT_DB_PATH = "app.db"
 def get_db_path() -> str:
     """
     Returns the SQLite DB path.
-    - In CI/tests you can override with env var SQLITE_DB_PATH (e.g. ':memory:' or 'test.db')
+    - In CI/tests you can override with env var SQLITE_DB_PATH
     - Otherwise defaults to app.db in the repo root.
     """
     return os.getenv("SQLITE_DB_PATH", DEFAULT_DB_PATH)
@@ -29,7 +29,6 @@ def connect(db_path: str | None = None) -> sqlite3.Connection:
 def init_db(db_path: str | None = None) -> None:
     """
     Initialize DB by executing app/init.sql.
-    Safe to call multiple times because init.sql uses IF NOT EXISTS / INSERT OR IGNORE.
     """
     conn = connect(db_path)
     try:
